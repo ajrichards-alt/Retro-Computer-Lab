@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#008080" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="description" content="Retro Computer Lab — Student Essay Writer" />
+  <title>Retro Computer Lab</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ░░ DESKTOP BACKGROUND ░░ -->
+  <div class="desktop">
+
+    <!-- ░░ APP WINDOW ░░ -->
+    <div class="window" id="mainWindow">
+
+      <!-- Title Bar -->
+      <div class="title-bar" id="titleBar">
+        <div class="title-bar-controls left">
+          <button class="win-btn close"   title="Close"   onclick="confirmClose()"></button>
+          <button class="win-btn minimise" title="Minimise"></button>
+          <button class="win-btn maximise" title="Maximise" onclick="toggleMaximise()"></button>
+        </div>
+        <div class="title-bar-text">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='4' width='12' height='9' fill='%23000'/%3E%3Crect x='3' y='5' width='10' height='7' fill='%2300f'/%3E%3Crect x='3' y='5' width='10' height='2' fill='%230af'/%3E%3C/svg%3E"
+               alt="" class="title-icon" />
+          Retro Computer Lab — Essay Writer v1.0
+        </div>
+        <div class="title-bar-controls right">
+          <button class="title-squish" onclick="toggleMaximise()">🗗</button>
+        </div>
+      </div>
+
+      <!-- Menu Bar -->
+      <div class="menu-bar">
+        <div class="menu-item" tabindex="0">
+          File
+          <div class="dropdown-menu">
+            <div class="menu-option" onclick="newDocument()">📄 New</div>
+            <div class="menu-option" onclick="printDoc()">🖨️ Print…</div>
+            <div class="menu-separator"></div>
+            <div class="menu-option" onclick="confirmClose()">✖ Exit</div>
+          </div>
+        </div>
+        <div class="menu-item" tabindex="0">
+          Edit
+          <div class="dropdown-menu">
+            <div class="menu-option" onclick="document.execCommand('undo')">↩ Undo</div>
+            <div class="menu-option" onclick="document.execCommand('redo')">↪ Redo</div>
+            <div class="menu-separator"></div>
+            <div class="menu-option" onclick="document.execCommand('selectAll')">⬛ Select All</div>
+          </div>
+        </div>
+        <div class="menu-item" tabindex="0">
+          Format
+          <div class="dropdown-menu">
+            <div class="menu-option" onclick="execFmt('bold')">𝐁 Bold</div>
+            <div class="menu-option" onclick="execFmt('italic')">𝐼 Italic</div>
+            <div class="menu-option" onclick="execFmt('underline')">U̲ Underline</div>
+          </div>
+        </div>
+        <div class="menu-item" tabindex="0">
+          Help
+          <div class="dropdown-menu">
+            <div class="menu-option" onclick="showHelp()">❓ About…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Info Bar -->
+      <div class="info-bar">
+        <div class="field-group">
+          <label for="studentName" class="field-label">Student Name:</label>
+          <input type="text" id="studentName" class="retro-input" placeholder="Last, First" autocomplete="name" />
+        </div>
+        <div class="field-group">
+          <label for="classPeriod" class="field-label">Class Period:</label>
+          <select id="classPeriod" class="retro-select">
+            <option value="">— Select —</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option><option>6</option>
+            <option>7</option><option>8</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="promptId" class="field-label">Prompt ID:</label>
+          <input type="text" id="promptId" class="retro-input" placeholder="e.g. P42" maxlength="10" />
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+
+        <!-- Formatting buttons -->
+        <button class="tool-btn" title="Bold (Ctrl+B)"        onclick="execFmt('bold')">
+          <span class="tool-icon bold-icon">B</span>
+        </button>
+        <button class="tool-btn" title="Italic (Ctrl+I)"      onclick="execFmt('italic')">
+          <span class="tool-icon italic-icon">I</span>
+        </button>
+        <button class="tool-btn" title="Underline (Ctrl+U)"   onclick="execFmt('underline')">
+          <span class="tool-icon underline-icon">U</span>
+        </button>
+        <button class="tool-btn" title="Strikethrough"        onclick="execFmt('strikeThrough')">
+          <span class="tool-icon strike-icon">S</span>
+        </button>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Align -->
+        <button class="tool-btn" title="Align Left"   onclick="execFmt('justifyLeft')">
+          <span class="tool-icon">&#x2261;</span>
+        </button>
+        <button class="tool-btn" title="Align Center" onclick="execFmt('justifyCenter')">
+          <span class="tool-icon">&#x2262;</span>
+        </button>
+        <button class="tool-btn" title="Align Right"  onclick="execFmt('justifyRight')">
+          <span class="tool-icon" style="transform:scaleX(-1);display:inline-block">&#x2261;</span>
+        </button>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Font family -->
+        <label for="fontSelect" class="sr-only">Font</label>
+        <select id="fontSelect" class="retro-select toolbar-select" title="Font Family" onchange="changeFont(this.value)">
+          <option value="'Courier New', Courier, monospace">Courier New</option>
+          <option value="'Monaco', 'Courier New', monospace">Monaco</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Lucida Console', monospace">Lucida Console</option>
+        </select>
+
+        <!-- Font size -->
+        <label for="fontSizeSelect" class="sr-only">Size</label>
+        <select id="fontSizeSelect" class="retro-select toolbar-select" title="Font Size" onchange="changeFontSize(this.value)">
+          <option value="1">8pt</option>
+          <option value="2">10pt</option>
+          <option value="3" selected>12pt</option>
+          <option value="4">14pt</option>
+          <option value="5">18pt</option>
+          <option value="6">24pt</option>
+          <option value="7">36pt</option>
+        </select>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Text color -->
+        <label class="tool-btn color-btn" title="Text Color">
+          <span class="tool-icon">🎨</span>
+          <input type="color" id="textColor" value="#000000" onchange="execFmt('foreColor', this.value)" style="opacity:0;position:absolute;width:0;height:0" />
+        </label>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Clipart -->
+        <button class="tool-btn" title="Insert Clipart" onclick="openClipartModal()">
+          <span class="tool-icon">🖼️</span> Clipart
+        </button>
+
+        <!-- Table -->
+        <button class="tool-btn" title="Insert Table" onclick="openTableModal()">
+          <span class="tool-icon">⊞</span> Table
+        </button>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Spellcheck toggle -->
+        <button class="tool-btn" id="spellBtn" title="Toggle Spellcheck" onclick="toggleSpell()">
+          <span class="tool-icon">ABC✓</span>
+        </button>
+
+      </div>
+
+      <!-- Ruler -->
+      <div class="ruler" id="ruler">
+        <div class="ruler-inner">
+          <div class="ruler-margin left-margin"  id="leftMarginHandle"  title="Left margin"></div>
+          <div class="ruler-ticks" id="rulerTicks"></div>
+          <div class="ruler-margin right-margin" id="rightMarginHandle" title="Right margin"></div>
+        </div>
+      </div>
+
+      <!-- Writing Canvas -->
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="page-shadow">
+          <div
+            id="editor"
+            class="editor"
+            contenteditable="true"
+            spellcheck="true"
+            autocorrect="on"
+            data-placeholder="Start typing your essay here…"
+            oninput="onEditorInput()"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div class="status-left">
+          <span class="status-cell" id="wordCountDisplay">Words: 0</span>
+          <span class="status-divider"></span>
+          <span class="status-cell" id="charCountDisplay">Chars: 0</span>
+          <span class="status-divider"></span>
+          <span class="status-cell" id="lineCountDisplay">Lines: 1</span>
+        </div>
+        <div class="status-right">
+          <span class="status-cell" id="spellStatus">Spellcheck: ON</span>
+          <span class="status-divider"></span>
+          <span class="status-cell" id="syncStatus">Last Sync: Never</span>
+          <span class="status-divider"></span>
+          <span class="status-cell" id="clockDisplay">--:--:-- --</span>
+        </div>
+      </div>
+
+    </div><!-- /window -->
+
+    <!-- Desktop Icons -->
+    <div class="desktop-icons">
+      <div class="desktop-icon" ondblclick="openRecycleBin()">
+        <div class="icon-img">🗑️</div>
+        <div class="icon-label">Recycle Bin</div>
+      </div>
+      <div class="desktop-icon" ondblclick="showHelp()">
+        <div class="icon-img">❓</div>
+        <div class="icon-label">Help</div>
+      </div>
+      <div class="desktop-icon" ondblclick="printDoc()">
+        <div class="icon-img">🖨️</div>
+        <div class="icon-label">Print</div>
+      </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+      <button class="start-btn" onclick="toggleStartMenu()">
+        <span class="start-logo">🖥</span> <strong>Start</strong>
+      </button>
+      <div class="taskbar-divider"></div>
+      <div class="taskbar-app active">
+        📝 Essay Writer
+      </div>
+      <div class="taskbar-clock" id="taskbarClock">--:--</div>
+
+      <!-- Start Menu -->
+      <div class="start-menu" id="startMenu">
+        <div class="start-menu-banner">
+          <span>Retro Computer Lab</span>
+        </div>
+        <div class="start-menu-items">
+          <div class="start-item" onclick="newDocument()">📄 New Document</div>
+          <div class="start-item" onclick="printDoc()">🖨️ Print</div>
+          <div class="start-separator"></div>
+          <div class="start-item" onclick="showHelp()">❓ Help &amp; About</div>
+          <div class="start-separator"></div>
+          <div class="start-item danger" onclick="confirmClose()">⏻ Shut Down…</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /desktop -->
+
+  <!-- ░░ MODALS ░░ -->
+
+  <!-- Clipart Modal -->
+  <div class="modal-overlay" id="clipartModal" onclick="closeModal('clipartModal')">
+    <div class="modal-window" onclick="event.stopPropagation()">
+      <div class="modal-title-bar">
+        <span>🖼️ Insert Clipart</span>
+        <button class="modal-close" onclick="closeModal('clipartModal')">✖</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Double-click a clipart to insert it into your essay:</p>
+        <div class="clipart-grid" id="clipartGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Modal -->
+  <div class="modal-overlay" id="tableModal" onclick="closeModal('tableModal')">
+    <div class="modal-window" onclick="event.stopPropagation()">
+      <div class="modal-title-bar">
+        <span>⊞ Insert Table</span>
+        <button class="modal-close" onclick="closeModal('tableModal')">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-config">
+          <div class="field-group">
+            <label class="field-label">Rows:</label>
+            <input type="number" id="tableRows" class="retro-input" value="3" min="1" max="20" style="width:60px" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Columns:</label>
+            <input type="number" id="tableCols" class="retro-input" value="3" min="1" max="10" style="width:60px" />
+          </div>
+        </div>
+        <div class="table-preview-wrap">
+          <div id="tablePreview" class="table-preview"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="retro-btn primary" onclick="insertTable()">Insert</button>
+          <button class="retro-btn" onclick="closeModal('tableModal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="helpModal" onclick="closeModal('helpModal')">
+    <div class="modal-window" onclick="event.stopPropagation()">
+      <div class="modal-title-bar">
+        <span>❓ About Retro Computer Lab</span>
+        <button class="modal-close" onclick="closeModal('helpModal')">✖</button>
+      </div>
+      <div class="modal-body help-body">
+        <div class="help-logo">🖥️</div>
+        <h2 class="help-title">Retro Computer Lab</h2>
+        <p class="help-version">Essay Writer v1.0 — Progressive Web App</p>
+        <hr class="retro-hr" />
+        <p>© 1995–2024 Marshall Honors. All rights reserved.</p>
+        <p>Built with HTML5, CSS3, and the spirit of floppy disks.</p>
+        <hr class="retro-hr" />
+        <div class="shortcut-table">
+          <div class="shortcut-row"><kbd>Ctrl+B</kbd><span>Bold</span></div>
+          <div class="shortcut-row"><kbd>Ctrl+I</kbd><span>Italic</span></div>
+          <div class="shortcut-row"><kbd>Ctrl+U</kbd><span>Underline</span></div>
+          <div class="shortcut-row"><kbd>Ctrl+Z</kbd><span>Undo</span></div>
+        </div>
+        <div class="modal-actions">
+          <button class="retro-btn primary" onclick="closeModal('helpModal')">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert / Confirm Modal -->
+  <div class="modal-overlay" id="alertModal" onclick="closeModal('alertModal')">
+    <div class="modal-window small-modal" onclick="event.stopPropagation()">
+      <div class="modal-title-bar">
+        <span id="alertTitle">⚠️ Notice</span>
+        <button class="modal-close" onclick="closeModal('alertModal')">✖</button>
+      </div>
+      <div class="modal-body">
+        <p id="alertMessage"></p>
+        <div class="modal-actions" id="alertActions">
+          <button class="retro-btn primary" onclick="alertOk()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ════════════════════════════════════════════════
+  //  RETRO COMPUTER LAB — Client JS
+  // ════════════════════════════════════════════════
+
+  /* ── State ── */
+  let spellcheckOn   = true;
+  let lastSyncTime   = 'Never';
+  let autoSaveTimer  = null;
+  let alertCallback  = null;
+  let isMaximised    = false;
+
+  const editor       = document.getElementById('editor');
+  const wordDisplay  = document.getElementById('wordCountDisplay');
+  const charDisplay  = document.getElementById('charCountDisplay');
+  const lineDisplay  = document.getElementById('lineCountDisplay');
+  const syncDisplay  = document.getElementById('syncStatus');
+  const spellDisplay = document.getElementById('spellStatus');
+  const clockDisplay = document.getElementById('clockDisplay');
+  const taskbarClock = document.getElementById('taskbarClock');
+
+  /* ── Clipart library ── */
+  const CLIPART = [
+    { emoji:'📚', label:'Books'      },
+    { emoji:'✏️',  label:'Pencil'    },
+    { emoji:'🔬', label:'Microscope' },
+    { emoji:'🌍', label:'Globe'      },
+    { emoji:'🏫', label:'School'     },
+    { emoji:'🖥️', label:'Computer'  },
+    { emoji:'📐', label:'Ruler'      },
+    { emoji:'🎓', label:'Graduation' },
+    { emoji:'🔭', label:'Telescope'  },
+    { emoji:'📝', label:'Notepad'    },
+    { emoji:'💡', label:'Idea'       },
+    { emoji:'🌟', label:'Star'       },
+    { emoji:'🦅', label:'Eagle'      },
+    { emoji:'🏆', label:'Trophy'     },
+    { emoji:'🎨', label:'Palette'    },
+    { emoji:'🔢', label:'Numbers'    },
+  ];
+
+  /* ─────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────── */
+  window.addEventListener('DOMContentLoaded', () => {
+    buildRuler();
+    buildClipartGrid();
+    updateClock();
+    setInterval(updateClock, 1000);
+    updateTablePreview();
+    document.getElementById('tableRows').addEventListener('input', updateTablePreview);
+    document.getElementById('tableCols').addEventListener('input', updateTablePreview);
+    loadFromStorage();
+    updateStats();
+  });
+
+  /* ─────────────────────────────────────────
+     CLOCK
+  ───────────────────────────────────────── */
+  function updateClock() {
+    const now = new Date();
+    const h   = now.getHours();
+    const m   = String(now.getMinutes()).padStart(2,'0');
+    const s   = String(now.getSeconds()).padStart(2,'0');
+    const ampm= h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    const full= `${h12}:${m}:${s} ${ampm}`;
+    const short=`${h12}:${m} ${ampm}`;
+    clockDisplay.textContent  = full;
+    taskbarClock.textContent  = short;
+  }
+
+  /* ─────────────────────────────────────────
+     RULER
+  ───────────────────────────────────────── */
+  function buildRuler() {
+    const ticks = document.getElementById('rulerTicks');
+    ticks.innerHTML = '';
+    for (let i = 0; i <= 60; i++) {
+      const t = document.createElement('div');
+      t.className = i % 10 === 0 ? 'tick major' : i % 5 === 0 ? 'tick mid' : 'tick minor';
+      if (i % 10 === 0) {
+        const lbl = document.createElement('span');
+        lbl.className = 'tick-label';
+        lbl.textContent = (i / 10) + (i ? '"' : '');
+        t.appendChild(lbl);
+      }
+      ticks.appendChild(t);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     FORMAT COMMANDS
+  ───────────────────────────────────────── */
+  function execFmt(cmd, val = null) {
+    editor.focus();
+    document.execCommand(cmd, false, val);
+    updateStats();
+  }
+
+  function changeFont(fontVal) {
+    editor.focus();
+    document.execCommand('fontName', false, fontVal);
+  }
+
+  function changeFontSize(sz) {
+    editor.focus();
+    document.execCommand('fontSize', false, sz);
+  }
+
+  /* ─────────────────────────────────────────
+     EDITOR EVENTS
+  ───────────────────────────────────────── */
+  function onEditorInput() {
+    updateStats();
+    scheduleSave();
+  }
+
+  function updateStats() {
+    const text = editor.innerText || '';
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    const chars = text.replace(/\n/g,'').length;
+    const lines = text === '' ? 1 : text.split(/\n/).length;
+    wordDisplay.textContent = `Words: ${words}`;
+    charDisplay.textContent = `Chars: ${chars}`;
+    lineDisplay.textContent = `Lines: ${lines}`;
+  }
+
+  /* ─────────────────────────────────────────
+     AUTOSAVE TO LOCALSTORAGE
+  ───────────────────────────────────────── */
+  function scheduleSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveToStorage, 2500);
+  }
+
+  function saveToStorage() {
+    const data = {
+      html        : editor.innerHTML,
+      studentName : document.getElementById('studentName').value,
+      classPeriod : document.getElementById('classPeriod').value,
+      promptId    : document.getElementById('promptId').value,
+      savedAt     : new Date().toLocaleTimeString(),
+    };
+    try {
+      localStorage.setItem('retroLabData', JSON.stringify(data));
+      lastSyncTime = data.savedAt;
+      syncDisplay.textContent = `Last Sync: ${lastSyncTime}`;
+      flashSync();
+    } catch(e) { /* storage not available */ }
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem('retroLabData');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.html)        editor.innerHTML = data.html;
+      if (data.studentName) document.getElementById('studentName').value = data.studentName;
+      if (data.classPeriod) document.getElementById('classPeriod').value = data.classPeriod;
+      if (data.promptId)    document.getElementById('promptId').value    = data.promptId;
+      if (data.savedAt)     syncDisplay.textContent = `Last Sync: ${data.savedAt}`;
+    } catch(e) {}
+  }
+
+  function flashSync() {
+    syncDisplay.classList.add('flash');
+    setTimeout(() => syncDisplay.classList.remove('flash'), 800);
+  }
+
+  /* ─────────────────────────────────────────
+     SPELLCHECK
+  ───────────────────────────────────────── */
+  function toggleSpell() {
+    spellcheckOn = !spellcheckOn;
+    editor.spellcheck   = spellcheckOn;
+    editor.autocorrect  = spellcheckOn ? 'on' : 'off';
+    spellDisplay.textContent = `Spellcheck: ${spellcheckOn ? 'ON' : 'OFF'}`;
+    document.getElementById('spellBtn').classList.toggle('active', spellcheckOn);
+  }
+
+  /* ─────────────────────────────────────────
+     CLIPART MODAL
+  ───────────────────────────────────────── */
+  function buildClipartGrid() {
+    const grid = document.getElementById('clipartGrid');
+    CLIPART.forEach(item => {
+      const cell = document.createElement('div');
+      cell.className = 'clipart-cell';
+      cell.title = item.label;
+      cell.innerHTML = `<div class="clipart-emoji">${item.emoji}</div><div class="clipart-label">${item.label}</div>`;
+      cell.addEventListener('dblclick', () => {
+        insertAtCaret(item.emoji + ' ');
+        closeModal('clipartModal');
+      });
+      grid.appendChild(cell);
+    });
+  }
+
+  function openClipartModal() {
+    document.getElementById('clipartModal').classList.add('open');
+  }
+
+  /* ─────────────────────────────────────────
+     TABLE MODAL
+  ───────────────────────────────────────── */
+  function openTableModal() {
+    updateTablePreview();
+    document.getElementById('tableModal').classList.add('open');
+  }
+
+  function updateTablePreview() {
+    const rows = parseInt(document.getElementById('tableRows').value) || 3;
+    const cols = parseInt(document.getElementById('tableCols').value) || 3;
+    let html = '<table class="preview-table">';
+    for (let r = 0; r < Math.min(rows, 5); r++) {
+      html += '<tr>';
+      for (let c = 0; c < Math.min(cols, 5); c++) {
+        html += `<td>${r===0 ? `Col ${c+1}` : ''}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    if (rows > 5 || cols > 5) html += `<p class="preview-note">Preview shows 5×5 max</p>`;
+    document.getElementById('tablePreview').innerHTML = html;
+  }
+
+  function insertTable() {
+    const rows = parseInt(document.getElementById('tableRows').value) || 3;
+    const cols = parseInt(document.getElementById('tableCols').value) || 3;
+    let html = '<table class="inserted-table"><tbody>';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        html += `<td contenteditable="true">&nbsp;</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table><p><br></p>';
+    editor.focus();
+    document.execCommand('insertHTML', false, html);
+    closeModal('tableModal');
+    updateStats();
+  }
+
+  /* ─────────────────────────────────────────
+     MODAL HELPERS
+  ───────────────────────────────────────── */
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  function showHelp() {
+    document.getElementById('helpModal').classList.add('open');
+  }
+
+  /* ─────────────────────────────────────────
+     ALERT / CONFIRM
+  ───────────────────────────────────────── */
+  function showAlert(title, msg, cb = null) {
+    document.getElementById('alertTitle').textContent   = title;
+    document.getElementById('alertMessage').textContent = msg;
+    alertCallback = cb;
+    const actions = document.getElementById('alertActions');
+    if (cb) {
+      actions.innerHTML = `
+        <button class="retro-btn primary" onclick="alertOk()">Yes</button>
+        <button class="retro-btn" onclick="closeModal('alertModal')">No</button>`;
+    } else {
+      actions.innerHTML = `<button class="retro-btn primary" onclick="alertOk()">OK</button>`;
+    }
+    document.getElementById('alertModal').classList.add('open');
+  }
+
+  function alertOk() {
+    closeModal('alertModal');
+    if (alertCallback) { alertCallback(); alertCallback = null; }
+  }
+
+  /* ─────────────────────────────────────────
+     APP ACTIONS
+  ───────────────────────────────────────── */
+  function confirmClose() {
+    showAlert('⚠️ Confirm Exit', 'Are you sure you want to close Essay Writer?', () => {
+      window.close();
+    });
+  }
+
+  function newDocument() {
+    showAlert('📄 New Document', 'Clear the current essay and start fresh?', () => {
+      editor.innerHTML = '';
+      document.getElementById('studentName').value = '';
+      document.getElementById('classPeriod').value = '';
+      document.getElementById('promptId').value    = '';
+      updateStats();
+    });
+  }
+
+  function printDoc() {
+    window.print();
+  }
+
+  function openRecycleBin() {
+    showAlert('🗑️ Recycle Bin', 'The Recycle Bin is empty.');
+  }
+
+  function toggleMaximise() {
+    isMaximised = !isMaximised;
+    document.getElementById('mainWindow').classList.toggle('maximised', isMaximised);
+  }
+
+  /* ─────────────────────────────────────────
+     START MENU
+  ───────────────────────────────────────── */
+  function toggleStartMenu() {
+    document.getElementById('startMenu').classList.toggle('open');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.start-btn') && !e.target.closest('.start-menu')) {
+      document.getElementById('startMenu').classList.remove('open');
+    }
+    // Close menu-bar dropdowns
+    if (!e.target.closest('.menu-item')) {
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // Menu bar keyboard / click behaviour
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const wasOpen = this.classList.contains('open');
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open'));
+      if (!wasOpen) this.classList.add('open');
+    });
+  });
+
+  /* ─────────────────────────────────────────
+     INSERT AT CARET
+  ───────────────────────────────────────── */
+  function insertAtCaret(text) {
+    editor.focus();
+    const sel = window.getSelection();
+    if (sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const node = document.createTextNode(text);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      editor.innerText += text;
+    }
+    updateStats();
+  }
+
+  /* ─────────────────────────────────────────
+     KEYBOARD SHORTCUTS
+  ───────────────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      if (e.key === 's') { e.preventDefault(); saveToStorage(); }
+      if (e.key === 'p') { e.preventDefault(); printDoc(); }
+      if (e.key === 'n') { e.preventDefault(); newDocument(); }
+    }
+  });
+
+  /* ─────────────────────────────────────────
+     PWA SERVICE WORKER
+  ───────────────────────────────────────── */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  </script>
+
+  <!-- ░░ APP ENGINE — telemetry, IndexedDB, heartbeat sync ░░ -->
+  <script src="app.js" defer></script>
+</body>
+</html>
