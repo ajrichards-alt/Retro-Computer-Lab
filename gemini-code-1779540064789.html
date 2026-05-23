@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Command Center — RetroLab</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── DASHBOARD SPECIFIC STYLES ── */
+    .dashboard-wrap {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .control-panel {
+      background: var(--win-bg);
+      border: 2px solid var(--win-darker);
+      box-shadow: var(--bevel-window);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-massive {
+      font-family: 'VT323', var(--ui-font);
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+      background: #000080;
+      border: 3px solid #fff;
+      box-shadow: var(--bevel-raised), 4px 4px 0 #000;
+      padding: 12px 32px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.1s;
+    }
+    .btn-massive:active {
+      box-shadow: var(--bevel-sunken), 1px 1px 0 #000;
+      transform: translate(3px, 3px);
+      background: #0000aa;
+    }
+
+    .dashboard-stats {
+      font-family: var(--ui-font);
+      font-size: 14px;
+      color: var(--win-black);
+      background: var(--win-white);
+      padding: 8px 16px;
+      box-shadow: var(--bevel-sunken);
+    }
+
+    /* Grid for Student Cards */
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      overflow-y: auto;
+      padding-bottom: 20px;
+    }
+
+    .student-card {
+      background: var(--win-bg);
+      box-shadow: var(--bevel-raised);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-header {
+      background: var(--title-active);
+      color: #fff;
+      padding: 4px 8px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-body {
+      background: var(--win-white);
+      box-shadow: var(--bevel-sunken);
+      padding: 8px;
+      font-family: var(--ui-font);
+      font-size: 13px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--win-dark);
+      border: 1px solid #000;
+    }
+    .status-indicator.active {
+      background: #00ff00;
+      box-shadow: 0 0 5px #00ff00;
+    }
+
+    .velocity-flag {
+      display: none;
+      background: var(--danger-red);
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      padding: 4px;
+      margin-top: 4px;
+      animation: blink 1s infinite alternate;
+      border: 1px solid #000;
+    }
+    .velocity-flag.visible {
+      display: block;
+    }
+
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="desktop">
+    <div class="window" style="width: 95vw; height: 95vh; margin: auto;">
+      
+      <div class="title-bar" id="titleBar">
+        <div class="title-bar-text">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='16' height='16' fill='%23fff'/%3E%3Crect x='2' y='4' width='12' height='9' fill='%23000'/%3E%3C/svg%3E" alt="" class="title-icon" />
+          Retro Computer Lab — Teacher Command Center
+        </div>
+      </div>
+
+      <div class="dashboard-wrap">
+        
+        <div class="control-panel">
+          <button class="btn-massive" onclick="energizeLab()">⚡ Energize Lab Hub ⚡</button>
+          <div class="dashboard-stats" id="globalStats">
+            Active Students: 0 | Last Refresh: --:--:--
+          </div>
+        </div>
+
+        <div class="student-grid" id="studentGrid">
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ════════════════════════════════════════════════════════════════
+    //  TEACHER COMMAND CENTER — Logic Engine
+    // ════════════════════════════════════════════════════════════════
+
+    const CFG = {
+      SECRET_KEY: 'MarshallHonors26',
+      // Ensure this matches the App Script deployment URL used in app.js
+      GAS_URL: 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec',
+      REFRESH_RATE_MS: 10000 // 10 seconds
+    };
+
+    let fetchInterval;
+
+    // ─────────────────────────────────────────────────────────────────
+    //  SECURITY: STRICT XSS SANITIZATION
+    // ─────────────────────────────────────────────────────────────────
+    /**
+     * Prevents malicious script execution by converting special characters 
+     * to their corresponding HTML entities before rendering.
+     */
+    function sanitizeHTML(str) {
+      if (typeof str !== 'string') return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  LAB CONTROLS
+    // ─────────────────────────────────────────────────────────────────
+    async function energizeLab() {
+      const btn = document.querySelector('.btn-massive');
+      btn.textContent = "ENERGIZING...";
+      
+      try {
+        const response = await fetch(CFG.GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret_key: CFG.SECRET_KEY,
+            action: 'open_lab' // Custom action flag for GAS
+          })
+        });
+        
+        if (response.ok) {
+          alert('System Online. Lab is OPEN for 95 minutes.');
+          btn.textContent = "⚡ LAB IS LIVE ⚡";
+          btn.style.background = "#008800"; // Switch to green
+        }
+      } catch (err) {
+        console.error("Failed to energize lab:", err);
+        alert('Transmission failed. Check connection.');
+        btn.textContent = "⚡ Energize Lab Hub ⚡";
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  DATA FETCHING & RENDERING
+    // ─────────────────────────────────────────────────────────────────
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch(CFG.GAS_URL, {
+          method: 'POST', // Using POST to send the secret key securely
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret_key: CFG.SECRET_KEY,
+            action: 'get_dashboard_data'
+          })
+        });
+
+        const data = await response.json();
+        
+        // Ensure data is valid before rendering
+        if (data && Array.isArray(data.submissions)) {
+          renderStudentCards(data.submissions);
+          document.getElementById('globalStats').textContent = 
+            `Active Students: ${data.submissions.length} | Last Refresh: ${new Date().toLocaleTimeString()}`;
+        }
+      } catch (err) {
+        console.warn("Dashboard sync delayed:", err);
+        document.getElementById('globalStats').textContent += " (Sync Error)";
+      }
+    }
+
+    function renderStudentCards(submissions) {
+      const grid = document.getElementById('studentGrid');
+      grid.innerHTML = ''; // Clear board
+
+      const now = Date.now();
+
+      submissions.forEach(sub => {
+        // 1. Sanitize incoming texts
+        const safeName = sanitizeHTML(sub.student_name || "Unknown Writer");
+        const safePrompt = sanitizeHTML(sub.prompt_id || "N/A");
+        const rawEssay = sub.essay_text || "";
+        
+        // 2. Calculate Word Count
+        const wordCount = rawEssay.trim() === '' ? 0 : rawEssay.trim().split(/\s+/).length;
+
+        // 3. Check Sync Status (< 15 seconds)
+        const lastSyncTime = new Date(sub.last_sync_time).getTime();
+        const isSynced = (now - lastSyncTime) <= 15000;
+        const statusClass = isSynced ? 'active' : '';
+
+        // 4. Analyze Telemetry for Velocity Anomaly (>100 chars in 5s)
+        let hasAnomaly = false;
+        try {
+          const telemetryLog = typeof sub.telemetry_log === 'string' 
+            ? JSON.parse(sub.telemetry_log) 
+            : (sub.telemetry_log || []);
+            
+          // Look for any single entry reporting a huge delta
+          hasAnomaly = telemetryLog.some(entry => entry.delta > 100);
+        } catch (e) {
+          console.warn(`Could not parse telemetry for ${safeName}`);
+        }
+
+        // 5. Build the Card
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        card.innerHTML = `
+          <div class="card-header">
+            <span>${safeName}</span>
+            <div class="status-indicator ${statusClass}" title="${isSynced ? 'Live' : 'Offline / Idle'}"></div>
+          </div>
+          <div class="card-body">
+            <div><strong>Prompt:</strong> ${safePrompt}</div>
+            <div><strong>Words:</strong> ${wordCount}</div>
+            <div><strong>Last Sync:</strong> ${new Date(lastSyncTime).toLocaleTimeString()}</div>
+            <div class="velocity-flag ${hasAnomaly ? 'visible' : ''}">
+              ⚠️ VELOCITY ANOMALY DETECTED ⚠️
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Initialize Dashboard
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchDashboardData(); // Initial load
+      fetchInterval = setInterval(fetchDashboardData, CFG.REFRESH_RATE_MS);
+    });
+
+  </script>
+</body>
+</html>
